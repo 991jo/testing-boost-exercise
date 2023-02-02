@@ -12,6 +12,15 @@ jobs:
       - name: "run clang"
         run: clang-format -n -Werror --verbose src/*
 
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: "install dependencies"
+        run: sudo apt update && sudo apt install -y gcc boost-defaults cmake yaml-cpp eigen3
+      - name:
+        run: mkdir build && cd build && cmake .. && make
+
           #  build:
           #    runs-on: ubuntu-latest
           #    steps:
