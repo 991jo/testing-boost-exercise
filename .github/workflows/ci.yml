@@ -1,0 +1,45 @@
+name: CI workflow for SSE Lecture
+
+on: [pull_request]
+
+jobs:
+  style_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: "install clang"
+        run: sudo apt update && sudo apt install -y clang
+      - name: "run clang"
+        run: clang-format -n -Werror --verbose src/*
+
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: ["gcc", "clang"]
+        build_type: ["Debug", "Release"]
+        include:
+          - compiler: gcc
+            cxx_compiler: g++
+            c_compiler: gcc
+          - compiler: clang
+            cxx_compiler: clang++
+            c_compiler: clang
+    steps:
+      - uses: actions/checkout@v3
+      - name: "install dependencies"
+        run: sudo apt update && sudo apt install -y ${{ matrix.compiler }} libboost-all-dev cmake libyaml-cpp-dev libeigen3-dev
+      - name:
+        run: mkdir build && cd build && cmake -DCMAKE_C_COMPILER=${{ matrix.c_compiler}} -DCMAKE_CXX_COMPILER=${{ matrix.cxx_compiler}} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} .. && make
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: "install dependencies"
+        run: sudo apt update && sudo apt install -y gcc libboost-all-dev cmake libyaml-cpp-dev libeigen3-dev
+      - name: "build tests"
+        run: mkdir build && cd build && cmake .. && make && make test
+      - name: "run tests"
+        run: cd build && make test
